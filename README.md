@@ -12,5 +12,5 @@ It is not possible to set file permissions of the Azure Data Lake Store directly
 
 ## Repo Organization
 
-- `templates`: Includes arm templates for creating a key vault, deploying a data lake and function to modify its permissions, and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file.
+- `templates`: Includes arm templates for creating a key vault (`key-vault-template.json`), deploying a data lake and function to modify its permissions (`arm-template.json`), and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file (`vault-parameters-template.json`).
 - `SetADLSPermission`: Azure Function project to set the permission of the Data Lake Store. This project is deployed by `templates/arm-template.json`.
