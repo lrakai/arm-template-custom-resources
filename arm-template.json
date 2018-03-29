@@ -10,6 +10,10 @@
 			"type": "string",
 			"defaultValue": "[concat('cadla', uniqueString(resourceGroup().id))]"
 		},
+		"storageAccountName": {
+			"type": "string",
+			"defaultValue": "[concat('calabfn', uniqueString(resourceGroup().id))]"
+		},
 		"location": {
 			"type": "string",
 			"defaultValue": "centralus"
