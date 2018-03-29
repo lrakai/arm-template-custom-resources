@@ -8,3 +8,9 @@ However, you can come close deploying an Azure Function that is set to run on st
 This project demonstrates the approach of deploying a function in an ARM template and retrieve Azure credentials using Azure Key Vault.
 The particular example uses the Azure function to set the permission of an Azure Data Lake Store that is created by the template.
 It is not possible to set file permissions of the Azure Data Lake Store directly in the ARM template, so the Function is used to set permissions.
+
+
+## Repo Organization
+
+- `templates`: Includes arm templates for creating a key vault, deploying a data lake and function to modify its permissions, and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file.
+- `SetADLSPermission`: Azure Function project to set the permission of the Data Lake Store. This project is deployed by `templates/arm-template.json`.
