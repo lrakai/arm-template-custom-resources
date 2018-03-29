@@ -30,6 +30,10 @@
 			"type": "string",
 			"defaultValue": "adlsPermission"
 		},
+		"projectDirectory": {
+			"type": "string",
+			"defaultValue": "SetADLSPermission"
+		},
 		"clientId": {
 			"type": "securestring",
 			"defaultValue": ""
@@ -117,22 +121,18 @@
 		{
 			"type": "Microsoft.Web/serverfarms",
 			"sku": {
-				"name": "Y1",
-				"tier": "Dynamic",
-				"size": "Y1",
-				"family": "Y",
-				"capacity": 0
+				"name": "s1",
+				"tier": "standard"
 			},
-			"kind": "functionapp",
 			"name": "[parameters('appServicePlanName')]",
 			"apiVersion": "2016-09-01",
-			"location": "Central US",
+			"location": "[resourceGroup().location]",
 			"properties": {
 				"name": "[parameters('appServicePlanName')]",
-				"perSiteScaling": false,
+				"workerSizeId": "0",
 				"reserved": false,
-				"targetWorkerCount": 0,
-				"targetWorkerSizeId": 0
+				"hostingEnvironment": "",
+				"numberOfWorkers": 1
 			}
 		},
 		{
@@ -140,7 +140,7 @@
 			"kind": "functionapp",
 			"name": "[parameters('labFunctionName')]",
 			"apiVersion": "2016-08-01",
-			"location": "Central US",
+			"location": "[resourceGroup().location]",
 			"scale": null,
 			"properties": {
 				"enabled": true,
@@ -168,20 +168,12 @@
 							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
 						},
 						{
-							"name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
-						},
-						{
-							"name": "WEBSITE_CONTENTSHARE",
-							"value": "[toLower(parameters('labFunctionName'))]"
-						},
-						{
 							"name": "FUNCTIONS_EXTENSION_VERSION",
 							"value": "~1"
 						},
 						{
 							"name": "Project",
-							"value": "SetADLSPermission"
+							"value": "[parameters('projectDirectory)]"
 						},
 						{
 							"name": "dataLakeStore",
@@ -211,7 +203,7 @@
 						"type": "config",
 						"name": "appsettings",
 						"apiVersion": "2016-08-01",
-						"location": "Central US",
+						"location": "[resourceGroup().location]",
 						"properties": {
 							"numberOfWorkers": 1,
 							"defaultDocuments": [
@@ -231,7 +223,7 @@
 							"detailedErrorLoggingEnabled": false,
 							"use32BitWorkerProcess": true,
 							"webSocketsEnabled": false,
-							"alwaysOn": false,
+							"alwaysOn": true,
 							"appCommandLine": "",
 							"managedPipelineMode": "Integrated",
 							"virtualApplications": [
