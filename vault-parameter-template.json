@@ -34,17 +34,17 @@
           "clientId": {
             "reference": {
               "keyVault": {
-                "id": "[resourceId(subscription().subscriptionId,  parameters('vaultResourceGroup'), 'Microsoft.KeyVault/vaults', parameters('clientIdSecretName'))]"
+                "id": "[resourceId(subscription().subscriptionId,  parameters('vaultResourceGroup'), 'Microsoft.KeyVault/vaults', parameters('vaultName'))]"
               },
-              "secretName": "[parameters('secretName')]"
+              "secretName": "[parameters('clientIdSecretName')]"
             }
           },
           "clientSecret": {
             "reference": {
               "keyVault": {
-                "id": "[resourceId(subscription().subscriptionId,  parameters('vaultResourceGroup'), 'Microsoft.KeyVault/vaults', parameters('clientSecretSecretName'))]"
+                "id": "[resourceId(subscription().subscriptionId,  parameters('vaultResourceGroup'), 'Microsoft.KeyVault/vaults', parameters('vaultName'))]"
               },
-              "secretName": "[parameters('secretName')]"
+              "secretName": "[parameters('clientSecretSecretName')]"
             }
           }
         }
