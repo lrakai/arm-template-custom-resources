@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vaultResourceGroup": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]"
+    },
+    "vaultName": {
+      "type": "string",
+      "defaultValue": "calabskeyvault"
+    },
+    "clientIdSecretName": {
+      "type": "string",
+      "defaultValue": "clientId"
+    },
+    "clientSecretSecretName": {
+      "type": "string",
+      "defaultValue": "clientSecret"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-01-01",
+      "name": "nestedTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "https://raw.githubusercontent.com/lrakai/azure-function-set-data-lake-access/master/arm-template.json",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "clientId": {
+            "reference": {
+              "keyVault": {
+                "id": "[resourceId(subscription().subscriptionId,  parameters('vaultResourceGroup'), 'Microsoft.KeyVault/vaults', parameters('clientIdSecretName'))]"
+              },
+              "secretName": "[parameters('secretName')]"
+            }
+          },
+          "clientSecret": {
+            "reference": {
+              "keyVault": {
+                "id": "[resourceId(subscription().subscriptionId,  parameters('vaultResourceGroup'), 'Microsoft.KeyVault/vaults', parameters('clientSecretSecretName'))]"
+              },
+              "secretName": "[parameters('secretName')]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
