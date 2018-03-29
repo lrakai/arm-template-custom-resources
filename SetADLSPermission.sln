@@ -5,6 +5,12 @@ VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetADLSPermission", "SetADLSPermission\SetADLSPermission.csproj", "{D5539601-B167-471C-9564-0E6BD1E07361}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{8336D3F7-80ED-4E29-9AA3-146DB045F970}"
+	ProjectSection(SolutionItems) = preProject
+		arm-template.json = arm-template.json
+		key-vault-template.json = key-vault-template.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
