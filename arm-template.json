@@ -17,6 +17,26 @@
 		"newTier": {
 			"type": "string",
 			"defaultValue": "Consumption"
+		},
+		"clientId": {
+			"type": "securestring",
+			"defaultValue": ""
+		},
+		"clientSecret": {
+			"type": "securestring",
+			"defaultValue": ""
+		},
+		"sourceCodeManualIntegration": {
+			"type": "bool",
+			"defaultValue": true
+		},
+		"sourceCodeBranch": {
+			"type": "string",
+			"defaultValue": "master"
+		},
+		"sourceCodeRepositoryURL": {
+			"type": "string",
+			"defaultValue": "https://github.com/lrakai/azure-function-set-data-lake-access.git"
 		}
 	},
 	"resources": [
@@ -49,6 +69,202 @@
 					}
 				],
 				"newTier": "[parameters('newTier')]"
+			}
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"sku": {
+				"name": "Standard_LRS",
+				"tier": "Standard"
+			},
+			"kind": "Storage",
+			"name": "[parameters('storageAccountName')]",
+			"apiVersion": "2017-10-01",
+			"location": "centralus",
+			"properties": {
+				"networkAcls": {
+					"bypass": "AzureServices",
+					"virtualNetworkRules": [],
+					"ipRules": [],
+					"defaultAction": "Allow"
+				},
+				"supportsHttpsTrafficOnly": false,
+				"encryption": {
+					"services": {
+						"file": {
+							"enabled": true
+						},
+						"blob": {
+							"enabled": true
+						}
+					},
+					"keySource": "Microsoft.Storage"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Web/serverfarms",
+			"sku": {
+				"name": "Y1",
+				"tier": "Dynamic",
+				"size": "Y1",
+				"family": "Y",
+				"capacity": 0
+			},
+			"kind": "functionapp",
+			"name": "[parameters('appServicePlanName')]",
+			"apiVersion": "2016-09-01",
+			"location": "Central US",
+			"properties": {
+				"name": "[parameters('appServicePlanName')]",
+				"perSiteScaling": false,
+				"reserved": false,
+				"targetWorkerCount": 0,
+				"targetWorkerSizeId": 0
+			}
+		},
+		{
+			"type": "Microsoft.Web/sites",
+			"kind": "functionapp",
+			"name": "[parameters('labFunctionName')]",
+			"apiVersion": "2016-08-01",
+			"location": "Central US",
+			"scale": null,
+			"properties": {
+				"enabled": true,
+				"hostNameSslStates": [
+					{
+						"name": "[concat(parameters('labFunctionName'),'.azurewebsites.net')]",
+						"sslState": "Disabled",
+						"hostType": "Standard"
+					},
+					{
+						"name": "[concat(parameters('labFunctionName'),'.scm.azurewebsites.net')]",
+						"sslState": "Disabled",
+						"hostType": "Repository"
+					}
+				],
+				"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+				"siteConfig": {
+					"appSettings": [
+						{
+							"name": "AzureWebJobsDashboard",
+							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(parameters('storageAccountid'),'2015-05-01-preview').key1)]"
+						},
+						{
+							"name": "AzureWebJobsStorage",
+							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(parameters('storageAccountid'),'2015-05-01-preview').key1)]"
+						},
+						{
+							"name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(parameters('storageAccountid'),'2015-05-01-preview').key1)]"
+						},
+						{
+							"name": "WEBSITE_CONTENTSHARE",
+							"value": "[toLower(parameters('labFunctionName'))]"
+						},
+						{
+							"name": "FUNCTIONS_EXTENSION_VERSION",
+							"value": "~1"
+						},
+						{
+							"name": "Project",
+							"value": "SetADLSPermission"
+						},
+						{
+							"name": "dataLakeStore",
+							"value": "[parameters('storeName')]"
+						},
+						{
+							"name": "tenantId",
+							"value": "[subscription().tenantId]"
+						},
+						{
+							"name": "clientId",
+							"value": "[parameters('clientId')]"
+						},
+						{
+							"name": "clientSecret",
+							"value": "[parameters('clientSecret')]"
+						}
+					],
+					"clientAffinityEnabled": false,
+					"clientCertEnabled": false,
+					"hostNamesDisabled": false,
+					"containerSize": 1536,
+					"dailyMemoryTimeQuota": 0
+				},
+				"resources": [
+					{
+						"type": "config",
+						"name": "appsettings",
+						"apiVersion": "2016-08-01",
+						"location": "Central US",
+						"properties": {
+							"numberOfWorkers": 1,
+							"defaultDocuments": [
+								"Default.htm",
+								"Default.html",
+								"Default.asp",
+								"index.htm",
+								"index.html",
+								"iisstart.htm",
+								"default.aspx",
+								"index.php"
+							],
+							"netFrameworkVersion": "v4.0",
+							"requestTracingEnabled": false,
+							"httpLoggingEnabled": false,
+							"logsDirectorySizeLimit": 35,
+							"detailedErrorLoggingEnabled": false,
+							"use32BitWorkerProcess": true,
+							"webSocketsEnabled": false,
+							"alwaysOn": false,
+							"appCommandLine": "",
+							"managedPipelineMode": "Integrated",
+							"virtualApplications": [
+								{
+									"virtualPath": "/",
+									"physicalPath": "site\\wwwroot",
+									"preloadEnabled": false,
+									"virtualDirectories": null
+								}
+							],
+							"siteAuthEnabled": false,
+							"cors": {
+								"allowedOrigins": [
+									"https://functions.azure.com",
+									"https://functions-staging.azure.com",
+									"https://functions-next.azure.com"
+								]
+							},
+							"http20Enabled": true,
+							"minTlsVersion": "1.0"
+						},
+						"dependsOn": [
+							"[resourceId('Microsoft.Web/sites', parameters('labFunctionName'))]",
+							"[resourceId('Microsoft.Web/sites/sourcecontrols', parameters('appName'), 'web')]",
+							"[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+
+						]
+					},
+					{
+						"apiVersion": "2015-08-01",
+						"name": "web",
+						"type": "sourcecontrols",
+						"dependsOn": [
+							"[resourceId('Microsoft.Web/sites/', parameters('labFunctionApp'))]"
+						],
+						"properties": {
+							"RepoUrl": "[parameters('sourceCodeRepositoryURL')]",
+							"branch": "[parameters('sourceCodeBranch')]",
+							"IsManualIntegration": "[parameters('sourceCodeManualIntegration')]"
+						}
+					}
+				],
+				"dependsOn": [
+					"[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+				]
 			}
 		}
 	]
