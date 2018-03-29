@@ -173,7 +173,7 @@
 						},
 						{
 							"name": "Project",
-							"value": "[parameters('projectDirectory)]"
+							"value": "[parameters('projectDirectory')]"
 						},
 						{
 							"name": "dataLakeStore",
