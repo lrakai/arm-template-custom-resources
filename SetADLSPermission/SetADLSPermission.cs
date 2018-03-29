@@ -59,7 +59,7 @@ namespace SetADLSPermission
         }
 
         [FunctionName("SetADLSPermission")]
-        public static void Run([TimerTrigger("0 0 * * * *", RunOnStartup = true)]TimerInfo myTimer, TraceWriter log)
+        public static void Run([TimerTrigger("0 0 0 1 1 *", RunOnStartup = true)]TimerInfo myTimer, TraceWriter log)
         {
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
 
