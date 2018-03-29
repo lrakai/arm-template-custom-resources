@@ -257,7 +257,6 @@
 							"[resourceId('Microsoft.Web/sites', parameters('labFunctionName'))]",
 							"[resourceId('Microsoft.Web/sites/sourcecontrols', parameters('labFunctionName'), 'web')]",
 							"[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-
 						]
 					},
 					{
