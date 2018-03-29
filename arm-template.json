@@ -22,6 +22,10 @@
 			"type": "string",
 			"defaultValue": "Consumption"
 		},
+		"appServicePlanName": {
+			"type": "string",
+			"defaultValue": "[concat('calasp', uniqueString(resourceGroup().id))]"
+		},
 		"clientId": {
 			"type": "securestring",
 			"defaultValue": ""
