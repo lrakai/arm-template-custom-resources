@@ -17,7 +17,7 @@ namespace SetADLSPermission
 
         private static string GetAzureAccessToken()
         {
-            string tenantId = GetEnvironmentVariable("domain");
+            string tenantId = GetEnvironmentVariable("tenantId");
             string loginUri = $"https://login.microsoftonline.com/{tenantId}/oauth2/authorize";
 
             var authCtx = new AuthenticationContext(loginUri);
@@ -26,8 +26,7 @@ namespace SetADLSPermission
                 GetEnvironmentVariable("clientSecret")
             );
 
-            var result = authCtx.AcquireToken(resource: "https://management.core.windows.net/",
-                clientCredential: credential);
+            var result = authCtx.AcquireToken("https://management.core.windows.net/", credential);
 
             if (result == null)
                 throw new InvalidOperationException("Failed to aquire token");
