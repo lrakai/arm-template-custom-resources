@@ -36,7 +36,7 @@
     },
     "projectDirectory": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "PublishOutput"
     },
     "clientId": {
       "type": "securestring",
@@ -137,10 +137,6 @@
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
               "value": "~1"
-            },
-            {
-              "name": "Project",
-              "value": "[parameters('projectDirectory')]"
             },
             {
               "name": "dataLakeStore",
