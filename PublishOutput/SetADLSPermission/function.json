@@ -1,0 +1,16 @@
+{
+  "generatedBy": "Microsoft.NET.Sdk.Functions.Generator-1.0.0.0",
+  "configurationSource": "attributes",
+  "bindings": [
+    {
+      "type": "timerTrigger",
+      "schedule": "0 0 0 1 1 *",
+      "useMonitor": true,
+      "runOnStartup": true,
+      "name": "myTimer"
+    }
+  ],
+  "disabled": false,
+  "scriptFile": "../bin/SetADLSPermission.dll",
+  "entryPoint": "SetADLSPermission.Adminaton.Run"
+}
