@@ -24,7 +24,7 @@
     },
     "appServicePlanName": {
       "type": "string",
-      "defaultValue": "[concat('cafnasp', uniqueString(resourceGroup().id))]"
+      "defaultValue": "[concat('cafnappsp', uniqueString(resourceGroup().id))]"
     },
     "labFunctionName": {
       "type": "string",
