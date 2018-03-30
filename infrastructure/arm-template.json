@@ -138,7 +138,7 @@
       "type": "Microsoft.Web/sites",
       "kind": "functionapp",
       "name": "[parameters('labFunctionName')]",
-      "apiVersion": "2016-08-01",
+      "apiVersion": "2015-08-01",
       "location": "[resourceGroup().location]",
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
