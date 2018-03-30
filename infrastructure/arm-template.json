@@ -36,7 +36,7 @@
     },
     "projectDirectory": {
       "type": "string",
-      "defaultValue": "SetADLSPermission"
+      "defaultValue": "PublishOutput"
     },
     "clientId": {
       "type": "securestring",
