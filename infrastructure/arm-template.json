@@ -1,274 +1,204 @@
 {
-	"$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
-	"contentVersion": "1.0.0.0",
-	"parameters": {
-		"storeName": {
-			"type": "string",
-			"defaultValue": "[concat('cadlstore', uniqueString(resourceGroup().id))]"
-		},
-		"analyticsName": {
-			"type": "string",
-			"defaultValue": "[concat('cadla', uniqueString(resourceGroup().id))]"
-		},
-		"storageAccountName": {
-			"type": "string",
-			"defaultValue": "[concat('calabfn', uniqueString(resourceGroup().id))]"
-		},
-		"location": {
-			"type": "string",
-			"defaultValue": "centralus"
-		},
-		"newTier": {
-			"type": "string",
-			"defaultValue": "Consumption"
-		},
-		"appServicePlanName": {
-			"type": "string",
-			"defaultValue": "[concat('cafnasp', uniqueString(resourceGroup().id))]"
-		},
-		"labFunctionName": {
-			"type": "string",
-			"defaultValue": "adlsPermission"
-		},
-		"projectDirectory": {
-			"type": "string",
-			"defaultValue": "SetADLSPermission"
-		},
-		"clientId": {
-			"type": "securestring",
-			"defaultValue": ""
-		},
-		"clientSecret": {
-			"type": "securestring",
-			"defaultValue": ""
-		},
-		"sourceCodeManualIntegration": {
-			"type": "bool",
-			"defaultValue": true
-		},
-		"sourceCodeBranch": {
-			"type": "string",
-			"defaultValue": "master"
-		},
-		"sourceCodeRepositoryURL": {
-			"type": "string",
-			"defaultValue": "https://github.com/lrakai/azure-function-set-data-lake-access.git"
-		}
-	},
-	"resources": [
-		{
-			"apiVersion": "2016-11-01",
-			"name": "[parameters('storeName')]",
-			"location": "[parameters('location')]",
-			"type": "Microsoft.DataLakeStore/accounts",
-			"properties": {
-				"newTier": "[parameters('newTier')]",
-				"encryptionState": "Enabled",
-				"encryptionConfig": {
-					"type": "ServiceManaged"
-				}
-			}
-		},
-		{
-			"apiVersion": "2016-11-01",
-			"name": "[parameters('analyticsName')]",
-			"location": "[parameters('location')]",
-			"dependsOn": [
-				"[parameters('storeName')]"
-			],
-			"type": "Microsoft.DataLakeAnalytics/accounts",
-			"properties": {
-				"defaultDataLakeStoreAccount": "[parameters('storeName')]",
-				"dataLakeStoreAccounts": [
-					{
-						"name": "[parameters('storeName')]"
-					}
-				],
-				"newTier": "[parameters('newTier')]"
-			}
-		},
-		{
-			"type": "Microsoft.Storage/storageAccounts",
-			"sku": {
-				"name": "Standard_LRS",
-				"tier": "Standard"
-			},
-			"kind": "Storage",
-			"name": "[parameters('storageAccountName')]",
-			"apiVersion": "2017-10-01",
-			"location": "centralus",
-			"properties": {
-				"networkAcls": {
-					"bypass": "AzureServices",
-					"virtualNetworkRules": [],
-					"ipRules": [],
-					"defaultAction": "Allow"
-				},
-				"supportsHttpsTrafficOnly": false,
-				"encryption": {
-					"services": {
-						"file": {
-							"enabled": true
-						},
-						"blob": {
-							"enabled": true
-						}
-					},
-					"keySource": "Microsoft.Storage"
-				}
-			}
-		},
-		{
-			"type": "Microsoft.Web/serverfarms",
-			"sku": {
-				"name": "s1",
-				"tier": "standard"
-			},
-			"name": "[parameters('appServicePlanName')]",
-			"apiVersion": "2016-09-01",
-			"location": "[resourceGroup().location]",
-			"properties": {
-				"name": "[parameters('appServicePlanName')]",
-				"workerSizeId": "0",
-				"reserved": false,
-				"hostingEnvironment": "",
-				"numberOfWorkers": 1
-			}
-		},
-		{
-			"type": "Microsoft.Web/sites",
-			"kind": "functionapp",
-			"name": "[parameters('labFunctionName')]",
-			"apiVersion": "2016-08-01",
-			"location": "[resourceGroup().location]",
-			"scale": null,
-			"properties": {
-				"enabled": true,
-				"hostNameSslStates": [
-					{
-						"name": "[concat(parameters('labFunctionName'),'.azurewebsites.net')]",
-						"sslState": "Disabled",
-						"hostType": "Standard"
-					},
-					{
-						"name": "[concat(parameters('labFunctionName'),'.scm.azurewebsites.net')]",
-						"sslState": "Disabled",
-						"hostType": "Repository"
-					}
-				],
-				"serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
-				"siteConfig": {
-					"appSettings": [
-						{
-							"name": "AzureWebJobsDashboard",
-							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
-						},
-						{
-							"name": "AzureWebJobsStorage",
-							"value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
-						},
-						{
-							"name": "FUNCTIONS_EXTENSION_VERSION",
-							"value": "~1"
-						},
-						{
-							"name": "Project",
-							"value": "[parameters('projectDirectory')]"
-						},
-						{
-							"name": "dataLakeStore",
-							"value": "[parameters('storeName')]"
-						},
-						{
-							"name": "tenantId",
-							"value": "[subscription().tenantId]"
-						},
-						{
-							"name": "clientId",
-							"value": "[parameters('clientId')]"
-						},
-						{
-							"name": "clientSecret",
-							"value": "[parameters('clientSecret')]"
-						}
-					],
-					"clientAffinityEnabled": false,
-					"clientCertEnabled": false,
-					"hostNamesDisabled": false,
-					"containerSize": 1536,
-					"dailyMemoryTimeQuota": 0
-				},
-				"resources": [
-					{
-						"type": "config",
-						"name": "appsettings",
-						"apiVersion": "2016-08-01",
-						"location": "[resourceGroup().location]",
-						"properties": {
-							"numberOfWorkers": 1,
-							"defaultDocuments": [
-								"Default.htm",
-								"Default.html",
-								"Default.asp",
-								"index.htm",
-								"index.html",
-								"iisstart.htm",
-								"default.aspx",
-								"index.php"
-							],
-							"netFrameworkVersion": "v4.0",
-							"requestTracingEnabled": false,
-							"httpLoggingEnabled": false,
-							"logsDirectorySizeLimit": 35,
-							"detailedErrorLoggingEnabled": false,
-							"use32BitWorkerProcess": true,
-							"webSocketsEnabled": false,
-							"alwaysOn": true,
-							"appCommandLine": "",
-							"managedPipelineMode": "Integrated",
-							"virtualApplications": [
-								{
-									"virtualPath": "/",
-									"physicalPath": "site\\wwwroot",
-									"preloadEnabled": false,
-									"virtualDirectories": null
-								}
-							],
-							"siteAuthEnabled": false,
-							"cors": {
-								"allowedOrigins": [
-									"https://functions.azure.com",
-									"https://functions-staging.azure.com",
-									"https://functions-next.azure.com"
-								]
-							},
-							"http20Enabled": true,
-							"minTlsVersion": "1.0"
-						},
-						"dependsOn": [
-							"[resourceId('Microsoft.Web/sites', parameters('labFunctionName'))]",
-							"[resourceId('Microsoft.Web/sites/sourcecontrols', parameters('labFunctionName'), 'web')]",
-							"[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-						]
-					},
-					{
-						"apiVersion": "2015-08-01",
-						"name": "web",
-						"type": "sourcecontrols",
-						"dependsOn": [
-							"[resourceId('Microsoft.Web/sites/', parameters('labFunctionName'))]"
-						],
-						"properties": {
-							"RepoUrl": "[parameters('sourceCodeRepositoryURL')]",
-							"branch": "[parameters('sourceCodeBranch')]",
-							"IsManualIntegration": "[parameters('sourceCodeManualIntegration')]"
-						}
-					}
-				],
-				"dependsOn": [
-					"[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
-				]
-			}
-		}
-	]
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storeName": {
+      "type": "string",
+      "defaultValue": "[concat('cadlstore', uniqueString(resourceGroup().id))]"
+    },
+    "analyticsName": {
+      "type": "string",
+      "defaultValue": "[concat('cadla', uniqueString(resourceGroup().id))]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "[concat('calabfn', uniqueString(resourceGroup().id))]"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "centralus"
+    },
+    "newTier": {
+      "type": "string",
+      "defaultValue": "Consumption"
+    },
+    "appServicePlanName": {
+      "type": "string",
+      "defaultValue": "[concat('cafnasp', uniqueString(resourceGroup().id))]"
+    },
+    "labFunctionName": {
+      "type": "string",
+      "defaultValue": "adlsPermission"
+    },
+    "projectDirectory": {
+      "type": "string",
+      "defaultValue": "SetADLSPermission"
+    },
+    "clientId": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "clientSecret": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "sourceCodeManualIntegration": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "sourceCodeBranch": {
+      "type": "string",
+      "defaultValue": "master"
+    },
+    "sourceCodeRepositoryURL": {
+      "type": "string",
+      "defaultValue": "https://github.com/lrakai/azure-function-set-data-lake-access.git"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-11-01",
+      "name": "[parameters('storeName')]",
+      "location": "[parameters('location')]",
+      "type": "Microsoft.DataLakeStore/accounts",
+      "properties": {
+        "newTier": "[parameters('newTier')]",
+        "encryptionState": "Enabled",
+        "encryptionConfig": {
+          "type": "ServiceManaged"
+        }
+      }
+    },
+    {
+      "apiVersion": "2016-11-01",
+      "name": "[parameters('analyticsName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[parameters('storeName')]"
+      ],
+      "type": "Microsoft.DataLakeAnalytics/accounts",
+      "properties": {
+        "defaultDataLakeStoreAccount": "[parameters('storeName')]",
+        "dataLakeStoreAccounts": [
+          {
+            "name": "[parameters('storeName')]"
+          }
+        ],
+        "newTier": "[parameters('newTier')]"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[parameters('storageAccountName')]",
+      "apiVersion": "2017-10-01",
+      "location": "centralus",
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": false,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "sku": {
+        "name": "s1",
+        "tier": "standard"
+      },
+      "name": "[parameters('appServicePlanName')]",
+      "apiVersion": "2016-09-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "name": "[parameters('appServicePlanName')]",
+        "workerSizeId": "0",
+        "hostingEnvironment": "",
+        "numberOfWorkers": 1
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "kind": "functionapp",
+      "name": "[parameters('labFunctionName')]",
+      "apiVersion": "2016-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "AzureWebJobsDashboard",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~1"
+            },
+            {
+              "name": "Project",
+              "value": "[parameters('projectDirectory')]"
+            },
+            {
+              "name": "dataLakeStore",
+              "value": "[parameters('storeName')]"
+            },
+            {
+              "name": "tenantId",
+              "value": "[subscription().tenantId]"
+            },
+            {
+              "name": "clientId",
+              "value": "[parameters('clientId')]"
+            },
+            {
+              "name": "clientSecret",
+              "value": "[parameters('clientSecret')]"
+            }
+          ],
+          "alwaysOn": true
+        },
+        "resources": [
+          {
+            "apiVersion": "2015-08-01",
+            "name": "web",
+            "type": "sourcecontrols",
+            "dependsOn": [
+              "[resourceId('Microsoft.Web/sites/', parameters('labFunctionName'))]"
+            ],
+            "properties": {
+              "RepoUrl": "[parameters('sourceCodeRepositoryURL')]",
+              "branch": "[parameters('sourceCodeBranch')]",
+              "IsManualIntegration": "[parameters('sourceCodeManualIntegration')]"
+            }
+          }
+        ],
+        "dependsOn": [
+          "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+          "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+        ]
+      }
+    }
+  ]
 }
