@@ -15,6 +15,24 @@ namespace SetADLSPermission
     {
         public static string GetEnvironmentVariable(string name) => System.Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
 
+        [FunctionName("SetADLSPermission")]
+        public static void Run([TimerTrigger("0 0 0 1 1 *", RunOnStartup = true)]TimerInfo myTimer, TraceWriter log)
+        {
+            log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
+
+            var dataLakeStore = GetEnvironmentVariable("dataLakeStore");
+            var accountName = $"{dataLakeStore}.azuredatalakestore.net";
+
+            // var credentials = GetClientCredentials();
+            // var adlsClient = AdlsClient.CreateClient(accountName, credentials);
+
+            // var token = GetEnvironmentVariable("token");
+            var token = GetAzureAccessToken();
+            var adlsClient = AdlsClient.CreateClient(accountName, token);
+            
+            ModifyAdlsPermission(log, adlsClient, "777");
+        }
+
         private static string GetAzureAccessToken()
         {
             string tenantId = GetEnvironmentVariable("tenantId");
@@ -57,27 +75,26 @@ namespace SetADLSPermission
                 .GetResult();
         }
 
-        [FunctionName("SetADLSPermission")]
-        public static void Run([TimerTrigger("0 0 0 1 1 *", RunOnStartup = true)]TimerInfo myTimer, TraceWriter log)
+        private static void ModifyAdlsPermission(TraceWriter log, AdlsClient adlsClient, string permisison)
         {
-            log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
+            adlsClient.SetPermission("/", permisison);
+            log.Info($"Set permission to {permisison}");
+        }
 
-            var dataLakeStore = GetEnvironmentVariable("dataLakeStore");
-            var accountName = $"{dataLakeStore}.azuredatalakestore.net";
-
-            // var credentials = GetClientCredentials();
-            // var adlsClient = AdlsClient.CreateClient(accountName, credentials);
-
-            // var token = GetEnvironmentVariable("token");
-            var token = GetAzureAccessToken();
-            var adlsClient = AdlsClient.CreateClient(accountName, token);
-
+        private static void ModifyAdlsAcl(TraceWriter log, AdlsClient adlsClient)
+        {
             var aclEntry = new List<AclEntry>()
             {
                 new AclEntry(AclType.other, null, AclScope.Access, AclAction.All)
             };
             var aclProcessorStats = adlsClient.ChangeAcl("/", aclEntry, RequestedAclType.ModifyAcl);
-            log.Info($"Set ACL for {aclProcessorStats.DirectoryProcessed} directories and {aclProcessorStats.FilesProcessed} files");
+            log.Info($"Set access ACL for {aclProcessorStats.DirectoryProcessed} directories and {aclProcessorStats.FilesProcessed} files");
+            aclEntry = new List<AclEntry>()
+            {
+                new AclEntry(AclType.other, null, AclScope.Default, AclAction.All)
+            };
+            aclProcessorStats = adlsClient.ChangeAcl("/", aclEntry, RequestedAclType.SetAcl);
+            log.Info($"Set default ACL for {aclProcessorStats.DirectoryProcessed} directories and {aclProcessorStats.FilesProcessed} files");
         }
     }
 }
