@@ -1,5 +1,5 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "storeName": {
@@ -10,15 +10,7 @@
       "type": "string",
       "defaultValue": "[concat('cadla', uniqueString(resourceGroup().id))]"
     },
-    "storageAccountName": {
-      "type": "string",
-      "defaultValue": "[concat('calabfn', uniqueString(resourceGroup().id))]"
-    },
-    "storageAccountType": {
-      "type": "string",
-      "defaultValue": "Standard_LRS"
-    },
-    "location": {
+    "dataLakeLocation": {
       "type": "string",
       "defaultValue": "centralus"
     },
@@ -26,44 +18,89 @@
       "type": "string",
       "defaultValue": "Consumption"
     },
-    "appServicePlanName": {
+    "appName": {
       "type": "string",
-      "defaultValue": "[concat('cafnappsp', uniqueString(resourceGroup().id))]"
+      "defaultValue": "[concat('cafnappsp', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "The name of the function app that you wish to create."
+      }
     },
-    "labFunctionName": {
+    "sku": {
       "type": "string",
-      "defaultValue": "adlsPermission"
+      "allowedValues": [
+        "Free",
+        "Shared",
+        "Basic",
+        "Standard"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "The pricing tier for the hosting plan."
+      }
+    },
+    "workerSize": {
+      "type": "string",
+      "allowedValues": [
+        "0",
+        "1",
+        "2"
+      ],
+      "defaultValue": "0",
+      "metadata": {
+        "description": "The instance size of the hosting plan (small, medium, or large)."
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_ZRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+        "description": "Storage Account type"
+      }
     },
     "projectDirectory": {
       "type": "string",
-      "defaultValue": "PublishOutput"
+      "defaultValue": "PublishOutput",
+      "metadata": {
+        "description": "The directory to start searching for the function if not in the repository's root."
+      }
+    },
+    "repoURL": {
+      "type": "string",
+      "defaultValue": "https://github.com/lrakai/azure-function-set-data-lake-access.git",
+      "metadata": {
+        "description": "The URL for the GitHub repository that contains the project to deploy."
+      }
+    },
+    "branch": {
+      "type": "string",
+      "defaultValue": "master",
+      "metadata": {
+        "description": "The branch of the GitHub repository to use."
+      }
     },
     "clientId": {
-      "type": "securestring",
-      "defaultValue": ""
+      "type": "securestring"
     },
     "clientSecret": {
-      "type": "securestring",
-      "defaultValue": ""
-    },
-    "sourceCodeManualIntegration": {
-      "type": "bool",
-      "defaultValue": true
-    },
-    "sourceCodeBranch": {
-      "type": "string",
-      "defaultValue": "master"
-    },
-    "sourceCodeRepositoryURL": {
-      "type": "string",
-      "defaultValue": "https://github.com/AzureBytes/functionshttpecho.git"
+      "type": "securestring"
     }
+  },
+  "variables": {
+    "functionAppName": "[parameters('appName')]",
+    "hostingPlanName": "[concat(parameters('appName'), '-plan')]",
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]"
   },
   "resources": [
     {
       "apiVersion": "2016-11-01",
       "name": "[parameters('storeName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('dataLakeLocation')]",
       "type": "Microsoft.DataLakeStore/accounts",
       "properties": {
         "newTier": "[parameters('newTier')]",
@@ -76,7 +113,7 @@
     {
       "apiVersion": "2016-11-01",
       "name": "[parameters('analyticsName')]",
-      "location": "[parameters('location')]",
+      "location": "[parameters('dataLakeLocation')]",
       "dependsOn": [
         "[parameters('storeName')]"
       ],
@@ -93,7 +130,7 @@
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('storageAccountName')]",
+      "name": "[variables('storageAccountName')]",
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -102,41 +139,46 @@
     },
     {
       "type": "Microsoft.Web/serverfarms",
-      "name": "[parameters('appServicePlanName')]",
       "apiVersion": "2015-04-01",
+      "name": "[variables('hostingPlanName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "name": "[parameters('appServicePlanName')]",
-        "workerSize": "Small",
-        "sku": "Standard",
+        "name": "[variables('hostingPlanName')]",
+        "sku": "[parameters('sku')]",
+        "workerSize": "[parameters('workerSize')]",
         "hostingEnvironment": "",
         "numberOfWorkers": 1
       }
     },
     {
-      "type": "Microsoft.Web/sites",
-      "kind": "functionapp",
-      "name": "[parameters('labFunctionName')]",
       "apiVersion": "2015-08-01",
+      "type": "Microsoft.Web/sites",
+      "name": "[variables('functionAppName')]",
       "location": "[resourceGroup().location]",
+      "kind": "functionapp",
       "properties": {
-        "name": "[parameters('labFunctionName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        "name": "[variables('functionAppName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "hostingEnvironment": "",
         "clientAffinityEnabled": false,
         "siteConfig": {
+          "alwaysOn": true,
           "appSettings": [
-            {
-              "name": "AzureWebJobsDashboard",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
-            },
-            {
-              "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccountName')),'2015-05-01-preview').key1)]"
-            },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
               "value": "~1"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]"
+            },
+            {
+              "name": "AzureWebJobsDashboard",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2015-05-01-preview').key1,';')]"
+            },
+            {
+              "name": "Project",
+              "value": "[parameters('projectDirectory')]"
             },
             {
               "name": "dataLakeStore",
@@ -154,29 +196,29 @@
               "name": "clientSecret",
               "value": "[parameters('clientSecret')]"
             }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "resources": [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]",
+            "[resourceId('Microsoft.DataLakeStore/accounts', parameters('storeName'))]"
           ],
-          "alwaysOn": false
-        },
-        "resources": [
-          {
-            "apiVersion": "2015-08-01",
-            "name": "web",
-            "type": "sourcecontrols",
-            "dependsOn": [
-              "[resourceId('Microsoft.Web/sites', parameters('labFunctionName'))]"
-            ],
-            "properties": {
-              "RepoUrl": "[parameters('sourceCodeRepositoryURL')]",
-              "branch": "[parameters('sourceCodeBranch')]",
-              "IsManualIntegration": "[parameters('sourceCodeManualIntegration')]"
-            }
+          "properties": {
+            "RepoUrl": "[parameters('repoURL')]",
+            "branch": "[parameters('branch')]",
+            "IsManualIntegration": true
           }
-        ],
-        "dependsOn": [
-          "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
-          "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-        ]
-      }
+        }
+      ]
     }
   ]
 }
