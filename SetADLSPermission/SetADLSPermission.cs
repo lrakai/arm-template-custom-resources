@@ -8,12 +8,14 @@ using Microsoft.Azure.DataLake.Store.Acl;
 using Microsoft.Azure.DataLake.Store.AclTools;
 using Microsoft.Rest;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.Services.AppAuthentication;
 
 namespace SetADLSPermission
 {
     public static class Adminaton
     {
-        public static string GetEnvironmentVariable(string name) => System.Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
+        public static string GetEnvironmentVariable(string name) => Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Process);
 
         [FunctionName("SetADLSPermission")]
         public static void Run([TimerTrigger("0 0 0 1 1 *", RunOnStartup = true)]TimerInfo myTimer, TraceWriter log)
@@ -27,24 +29,52 @@ namespace SetADLSPermission
             // var adlsClient = AdlsClient.CreateClient(accountName, credentials);
 
             // var token = GetEnvironmentVariable("token");
-            var token = GetAzureAccessToken();
+            // var token = GetAzureAccessToken();
+            var token = GetAzureAccessTokenFromKeyVault();
             var adlsClient = AdlsClient.CreateClient(accountName, token);
-            
+
             ModifyAdlsPermission(log, adlsClient, "777");
         }
 
-        private static string GetAzureAccessToken()
+        private static string GetAzureAccessTokenFromKeyVault()
+        {
+            var clientId = GetEnvironmentVariable("clientId");
+            var vaultName = GetEnvironmentVariable("vaultName");
+            var retreivable = GetEnvironmentVariable("retrievable");
+
+            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+
+            var keyVaultClient = new KeyVaultClient(
+                new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+
+            var clientSecret = keyVaultClient.GetSecretAsync($"https://{vaultName}.vault.azure.net/secrets/{retreivable}")
+                .GetAwaiter()
+                .GetResult();
+
+            return GetTokenWithClientCredentials(
+                clientId,
+                clientSecret.Value);
+        }
+
+        private static string GetAzureAccessTokenFromEnvVars()
+        {
+            return GetTokenWithClientCredentials(
+                GetEnvironmentVariable("clientId"),
+                GetEnvironmentVariable("clientSecret")
+            );
+        }
+
+        private static string GetTokenWithClientCredentials(string clientId, string clientSecret)
         {
             string tenantId = GetEnvironmentVariable("tenantId");
             string loginUri = $"https://login.microsoftonline.com/{tenantId}/oauth2/authorize";
 
             var authCtx = new AuthenticationContext(loginUri);
-            var credential = new ClientCredential(
-                GetEnvironmentVariable("clientId"),
-                GetEnvironmentVariable("clientSecret")
-            );
+            var credential = new ClientCredential(clientId, clientSecret);
 
-            var result = authCtx.AcquireToken("https://management.core.windows.net/", credential);
+            var result = authCtx.AcquireTokenAsync("https://management.core.windows.net/", credential)
+                .GetAwaiter()
+                .GetResult();
 
             if (result == null)
                 throw new InvalidOperationException("Failed to aquire token");

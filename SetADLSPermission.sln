@@ -6,19 +6,23 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetADLSPermission", "SetADLSPermission\SetADLSPermission.csproj", "{D5539601-B167-471C-9564-0E6BD1E07361}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{35D44467-A9B7-406E-9D40-62CB6B42EFE0}"
-	ProjectSection(SolutionItems) = preProject
-		infrastructure\arm-template-consumption.json = infrastructure\arm-template-consumption.json
-		infrastructure\arm-template.json = infrastructure\arm-template.json
-		infrastructure\key-vault-template.json = infrastructure\key-vault-template.json
-		infrastructure\test.json = infrastructure\test.json
-		infrastructure\vault-parameter-template.json = infrastructure\vault-parameter-template.json
-		infrastructure\working.json = infrastructure\working.json
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BBF5EC3D-B98F-4984-9ED6-6ADE27CA5F35}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "function-env-vars", "function-env-vars", "{3AD93C19-D1F1-420F-BA48-945D078BFE01}"
+	ProjectSection(SolutionItems) = preProject
+		infrastructure\function-env-vars\arm-template-consumption.json = infrastructure\function-env-vars\arm-template-consumption.json
+		infrastructure\function-env-vars\arm-template.json = infrastructure\function-env-vars\arm-template.json
+		infrastructure\function-env-vars\key-vault-template.json = infrastructure\function-env-vars\key-vault-template.json
+		infrastructure\function-env-vars\test.json = infrastructure\function-env-vars\test.json
+		infrastructure\function-env-vars\vault-parameter-template.json = infrastructure\function-env-vars\vault-parameter-template.json
+		infrastructure\function-env-vars\working.json = infrastructure\function-env-vars\working.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "programmatic-key-vault-access", "programmatic-key-vault-access", "{C756ED9A-2CE1-47A0-99F3-03CE38E25A2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3AD93C19-D1F1-420F-BA48-945D078BFE01} = {35D44467-A9B7-406E-9D40-62CB6B42EFE0}
+		{C756ED9A-2CE1-47A0-99F3-03CE38E25A2B} = {35D44467-A9B7-406E-9D40-62CB6B42EFE0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {294BF087-4BB5-4909-9885-0C99F9054B86}

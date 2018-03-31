@@ -12,10 +12,12 @@ It is not possible to set file permissions of the Azure Data Lake Store directly
 
 ## Repo Organization
 
-- `templates`: Includes arm templates for creating a key vault (`key-vault-template.json`), deploying a data lake and function to modify its permissions (`arm-template.json`), and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file (`vault-parameters-template.json`).
+- `templates`: ARM templates to deploy Azure Functions capable of modifying resources created by the template (Data Lake Store permissions in the example)
+    - `function-env-vars`: Includes arm templates for creating a key vault (`key-vault-template.json`), deploying a data lake and function to modify its permissions (`arm-template.json`), and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file (`vault-parameters-template.json`).  Use the function-env-var branch for a ready to use version.
+	- `programmatic-key-vault-access`: Includes arm templates for deploying a data lake, function with a managed service identity to modify its permissions, and key vault to store the secret that the function programmatically accesses (not via an environment variable)
 - `SetADLSPermission`: Azure Function project to set the permission of the Data Lake Store. This project is deployed by `templates/arm-template.json`.
 
- ## Notes
+## Notes
 
 A consumption plan template is also included `arm-template-consumption.json`. But consumption plans don't support `alwaysOn` so you need to use a frequent schedule or external call to wake the function to have it run even with `RunOnStartup = true`.
-The app service plan template requires at least a basic tier because free and shared tiers don't support `alwaysOn`.
+The app service plan template requires at least a basic tier because free and shared tiers don't support `alwaysOn`. Basic tier costs $0.075/hour at time of writing.
