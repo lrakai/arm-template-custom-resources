@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetADLSPermission", "SetADL
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastructure", "infrastructure", "{35D44467-A9B7-406E-9D40-62CB6B42EFE0}"
 	ProjectSection(SolutionItems) = preProject
+		infrastructure\arm-template-consumption.json = infrastructure\arm-template-consumption.json
 		infrastructure\arm-template.json = infrastructure\arm-template.json
 		infrastructure\key-vault-template.json = infrastructure\key-vault-template.json
 		infrastructure\test.json = infrastructure\test.json
