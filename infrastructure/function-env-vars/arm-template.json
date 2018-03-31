@@ -77,7 +77,7 @@
     },
     "branch": {
       "type": "string",
-      "defaultValue": "master",
+      "defaultValue": "function-env-var",
       "metadata": {
         "description": "The branch of the GitHub repository to use."
       }
