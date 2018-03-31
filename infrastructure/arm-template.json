@@ -28,12 +28,10 @@
     "sku": {
       "type": "string",
       "allowedValues": [
-        "Free",
-        "Shared",
         "Basic",
         "Standard"
       ],
-      "defaultValue": "Standard",
+      "defaultValue": "Basic",
       "metadata": {
         "description": "The pricing tier for the hosting plan."
       }

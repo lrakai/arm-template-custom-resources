@@ -15,4 +15,7 @@ It is not possible to set file permissions of the Azure Data Lake Store directly
 - `templates`: Includes arm templates for creating a key vault (`key-vault-template.json`), deploying a data lake and function to modify its permissions (`arm-template.json`), and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file (`vault-parameters-template.json`).
 - `SetADLSPermission`: Azure Function project to set the permission of the Data Lake Store. This project is deployed by `templates/arm-template.json`.
 
-A consumption plan template is also included `arm-template-consumption.json`. But consumption plans don't support alwaysOn so you need to use a frequent schedule or external call to wake the function to have it run even with `RunOnStartup = true`.
+ ## Notes
+
+A consumption plan template is also included `arm-template-consumption.json`. But consumption plans don't support `alwaysOn` so you need to use a frequent schedule or external call to wake the function to have it run even with `RunOnStartup = true`.
+The app service plan template requires at least a basic tier because free and shared tiers don't support `alwaysOn`.
