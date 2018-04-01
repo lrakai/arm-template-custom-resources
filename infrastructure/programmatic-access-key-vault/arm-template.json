@@ -100,8 +100,7 @@
     "functionAppName": "[parameters('appName')]",
     "hostingPlanName": "[concat(parameters('appName'), '-plan')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
-    "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', variables('functionAppName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
-    "keyVaultSecretName": "[concat(parameters('keyVaultName'), '/', parameters('secretName'))]"
+    "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', variables('functionAppName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
   },
   "resources": [
     {
@@ -201,6 +200,10 @@
             {
               "name": "clientId",
               "value": "[parameters('clientId')]"
+            },
+            {
+              "name": "vaultName",
+              "value": "[parameters('keyVaultName')]"
             }
           ]
         }
@@ -217,7 +220,7 @@
           "dependsOn": [
             "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]",
             "[resourceId('Microsoft.DataLakeStore/accounts', parameters('storeName'))]",
-            "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultSecretName'))]"
+            "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('secretName'))]"
           ],
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
@@ -246,6 +249,7 @@
               "secrets": [
                 "get",
                 "list",
+                "delete",
                 "purge"
               ]
             }
@@ -259,7 +263,7 @@
     },
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
-      "name": "[variables('keyVaultSecretName')]",
+      "name": "[concat(parameters('keyVaultName'), '/', parameters('secretName'))]",
       "apiVersion": "2015-06-01",
       "properties": {
         "value": "[parameters('secret')]"

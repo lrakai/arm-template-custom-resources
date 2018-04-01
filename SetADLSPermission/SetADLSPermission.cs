@@ -56,7 +56,6 @@ namespace SetADLSPermission
             {
                 secretName = secret.Identifier.Name;
             }
-            log.Info($"Found {secretName}");
             var clientSecret = keyVaultClient.DeleteSecretAsync(vaultUrl, secretName)
                 .GetAwaiter()
                 .GetResult();
