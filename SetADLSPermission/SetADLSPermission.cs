@@ -30,30 +30,51 @@ namespace SetADLSPermission
 
             // var token = GetEnvironmentVariable("token");
             // var token = GetAzureAccessToken();
-            var token = GetAzureAccessTokenFromKeyVault();
+            var token = GetAzureAccessTokenFromKeyVault(log);
             var adlsClient = AdlsClient.CreateClient(accountName, token);
 
             ModifyAdlsPermission(log, adlsClient, "777");
         }
 
-        private static string GetAzureAccessTokenFromKeyVault()
+        private static string GetAzureAccessTokenFromKeyVault(TraceWriter log)
         {
             var clientId = GetEnvironmentVariable("clientId");
             var vaultName = GetEnvironmentVariable("vaultName");
-            var retreivable = GetEnvironmentVariable("retrievable");
+            // var retreivable = GetEnvironmentVariable("retrievable");
 
             AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
 
             var keyVaultClient = new KeyVaultClient(
                 new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
 
-            var clientSecret = keyVaultClient.GetSecretAsync($"https://{vaultName}.vault.azure.net/secrets/{retreivable}")
+            var vaultUrl = $"https://{vaultName}.vault.azure.net";
+            var secrets = keyVaultClient.GetSecretsAsync(vaultUrl)
+                .GetAwaiter()
+                .GetResult();
+            string secretName = null;
+            foreach(var secret in secrets)
+            {
+                secretName = secret.Identifier.Name;
+            }
+            log.Info($"Found {secretName}");
+            var clientSecret = keyVaultClient.DeleteSecretAsync(vaultUrl, secretName)
                 .GetAwaiter()
                 .GetResult();
 
-            return GetTokenWithClientCredentials(
+            // var clientSecret = keyVaultClient.GetSecretAsync($"https://{vaultName}.vault.azure.net/secrets/{retreivable}")
+            //    .GetAwaiter()
+            //    .GetResult();
+
+            var token = GetTokenWithClientCredentials(
                 clientId,
                 clientSecret.Value);
+
+            keyVaultClient.PurgeDeletedSecretAsync(clientSecret.RecoveryId)
+                .GetAwaiter()
+                .GetResult();
+            log.Info("Purged");
+
+            return token;
         }
 
         private static string GetAzureAccessTokenFromEnvVars()
