@@ -25,28 +25,38 @@ namespace SetADLSPermission
             var dataLakeStore = GetEnvironmentVariable("dataLakeStore");
             var accountName = $"{dataLakeStore}.azuredatalakestore.net";
 
+            // Function environment variable clientSecret to authenticate
             // var credentials = GetClientCredentials();
             // var adlsClient = AdlsClient.CreateClient(accountName, credentials);
 
+            // Function environment varaible access token to authenticate
             // var token = GetEnvironmentVariable("token");
             // var token = GetAzureAccessToken();
-            var token = GetAzureAccessTokenFromKeyVault(log);
+
+            // Programmatic key vault access
+            var token = GetAzureAccessTokenFromKeyVault();
             var adlsClient = AdlsClient.CreateClient(accountName, token);
 
             ModifyAdlsPermission(log, adlsClient, "777");
         }
 
-        private static string GetAzureAccessTokenFromKeyVault(TraceWriter log)
+        private static string GetAzureAccessTokenFromKeyVault()
         {
             var clientId = GetEnvironmentVariable("clientId");
             var vaultName = GetEnvironmentVariable("vaultName");
-            // var retreivable = GetEnvironmentVariable("retrievable");
-
+            
+            // Use Managed Service Identity
             AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
-
             var keyVaultClient = new KeyVaultClient(
                 new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
 
+            // Use environment variable for secret name
+            // var secretName = GetEnvironmentVariable("retrievable");
+            // var clientSecret = keyVaultClient.GetSecretAsync($"https://{vaultName}.vault.azure.net/secrets/{secretName}")
+            //    .GetAwaiter()
+            //    .GetResult();
+
+            // List secrets to obtain secret value (assumes single token in vault)
             var vaultUrl = $"https://{vaultName}.vault.azure.net";
             var secrets = keyVaultClient.GetSecretsAsync(vaultUrl)
                 .GetAwaiter()
@@ -56,38 +66,34 @@ namespace SetADLSPermission
             {
                 secretName = secret.Identifier.Name;
             }
-            var clientSecret = keyVaultClient.DeleteSecretAsync(vaultUrl, secretName)
+            var clientSecret = keyVaultClient.GetSecretAsync(vaultUrl, secretName)
                 .GetAwaiter()
                 .GetResult();
 
-            // var clientSecret = keyVaultClient.GetSecretAsync($"https://{vaultName}.vault.azure.net/secrets/{retreivable}")
-            //    .GetAwaiter()
-            //    .GetResult();
+            // delete after retrieval for security
+            var deletedClientSecret = keyVaultClient.DeleteSecretAsync(vaultUrl, secretName)
+                .GetAwaiter()
+                .GetResult();
 
-            var token = GetTokenWithClientCredentials(
+            var authorizationHeader = GetAuthorizationHeaderWithClientCredentials(
                 clientId,
                 clientSecret.Value);
 
-            keyVaultClient.PurgeDeletedSecretAsync(clientSecret.RecoveryId)
-                .GetAwaiter()
-                .GetResult();
-            log.Info("Purged");
-
-            return token;
+            return authorizationHeader;
         }
 
         private static string GetAzureAccessTokenFromEnvVars()
         {
-            return GetTokenWithClientCredentials(
+            return GetAuthorizationHeaderWithClientCredentials(
                 GetEnvironmentVariable("clientId"),
                 GetEnvironmentVariable("clientSecret")
             );
         }
 
-        private static string GetTokenWithClientCredentials(string clientId, string clientSecret)
+        private static string GetAuthorizationHeaderWithClientCredentials(string clientId, string clientSecret)
         {
-            string tenantId = GetEnvironmentVariable("tenantId");
-            string loginUri = $"https://login.microsoftonline.com/{tenantId}/oauth2/authorize";
+            var tenantId = GetEnvironmentVariable("tenantId");
+            var loginUri = $"https://login.microsoftonline.com/{tenantId}/oauth2/authorize";
 
             var authCtx = new AuthenticationContext(loginUri);
             var credential = new ClientCredential(clientId, clientSecret);
@@ -101,7 +107,7 @@ namespace SetADLSPermission
 
             return result.CreateAuthorizationHeader();
         }
-
+        
         private static ServiceClientCredentials GetClientCredentials()
         {
             var credential = new ClientCredential(
