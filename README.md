@@ -14,6 +14,7 @@ It is not possible to set file permissions of the Azure Data Lake Store directly
 
 - `templates`: ARM templates to deploy Azure Functions capable of modifying resources created by the template (Data Lake Store permissions in the example)
     - `function-env-vars`: Includes arm templates for creating a key vault (`key-vault-template.json`), deploying a data lake and function to modify its permissions (`arm-template.json`), and a parent template to dynamically set the secureString parameter values from Azure Key Vault without a separate parameters file (`vault-parameters-template.json`).  Use the function-env-var branch for a ready to use version.
+![azurecustomresource1](https://user-images.githubusercontent.com/3911650/38169564-819b8e38-352a-11e8-8403-1b7f998706fb.png)
 	- `programmatic-key-vault-access`: Includes arm templates for deploying a data lake, function with a managed service identity to modify its permissions, and key vault to store the secret that the function programmatically accesses (not via an environment variable)
 - `SetADLSPermission`: Azure Function project to set the permission of the Data Lake Store. This project is deployed by `templates/arm-template.json`.
 
