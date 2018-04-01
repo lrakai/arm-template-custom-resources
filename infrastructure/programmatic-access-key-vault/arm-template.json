@@ -100,8 +100,8 @@
     "functionAppName": "[parameters('appName')]",
     "hostingPlanName": "[concat(parameters('appName'), '-plan')]",
     "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
-    "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('functionAppName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
-    "keyVaultSecretName": "concat(parameters('keyVaultName'), '/', parameters('secretName'))"
+    "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', variables('functionAppName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+    "keyVaultSecretName": "[concat(parameters('keyVaultName'), '/', parameters('secretName'))]"
   },
   "resources": [
     {
@@ -254,7 +254,7 @@
         "enabledForDeployment": false
       },
       "dependsOn": [
-        "[concat('Microsoft.Web/sites/', parameters('functionAppName'))]"
+        "[concat('Microsoft.Web/sites/', variables('functionAppName'))]"
       ]
     },
     {
