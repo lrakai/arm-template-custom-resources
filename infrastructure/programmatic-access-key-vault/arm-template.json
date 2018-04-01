@@ -83,18 +83,25 @@
       }
     },
     "clientId": {
-      "type": "securestring",
-      "defaultValue": "1923afe4-b16c-4022-a656-9639c444a1e0"
+      "type": "securestring"
     },
-    "retrievable": {
-      "type": "securestring",
-      "defaultValue": "clientSecret"
+    "secretName": {
+      "type": "securestring"
+    },
+    "secret": {
+      "type": "securestring"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "[concat(uniquestring(resourceGroup().id), 'kv')]"
     }
   },
   "variables": {
     "functionAppName": "[parameters('appName')]",
     "hostingPlanName": "[concat(parameters('appName'), '-plan')]",
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]"
+    "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'functions')]",
+    "identityResourceId": "[concat(resourceId('Microsoft.Web/sites', parameters('functionAppName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+    "keyVaultSecretName": "concat(parameters('keyVaultName'), '/', parameters('secretName'))"
   },
   "resources": [
     {
@@ -151,11 +158,14 @@
       }
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2016-03-01",
       "type": "Microsoft.Web/sites",
       "name": "[variables('functionAppName')]",
       "location": "[resourceGroup().location]",
       "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "properties": {
         "name": "[variables('functionAppName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -191,10 +201,6 @@
             {
               "name": "clientId",
               "value": "[parameters('clientId')]"
-            },
-            {
-              "name": "retrievable",
-              "value": "[parameters('retrievable')]"
             }
           ]
         }
@@ -210,7 +216,8 @@
           "type": "sourcecontrols",
           "dependsOn": [
             "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]",
-            "[resourceId('Microsoft.DataLakeStore/accounts', parameters('storeName'))]"
+            "[resourceId('Microsoft.DataLakeStore/accounts', parameters('storeName'))]",
+            "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultSecretName'))]"
           ],
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
@@ -218,6 +225,47 @@
             "IsManualIntegration": true
           }
         }
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "apiVersion": "2015-06-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+            "objectId": "[reference(variables('identityResourceId'), '2015-08-31-PREVIEW').principalId]",
+            "permissions": {
+              "secrets": [
+                "get",
+                "list",
+                "purge"
+              ]
+            }
+          }
+        ],
+        "enabledForDeployment": false
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/', parameters('functionAppName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[variables('keyVaultSecretName')]",
+      "apiVersion": "2015-06-01",
+      "properties": {
+        "value": "[parameters('secret')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
       ]
     }
   ]
