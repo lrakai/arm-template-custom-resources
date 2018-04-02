@@ -70,7 +70,7 @@
     },
     "repoURL": {
       "type": "string",
-      "defaultValue": "https://github.com/lrakai/azure-function-set-data-lake-access.git",
+      "defaultValue": "https://github.com/lrakai/arm-template-custom-resources.git",
       "metadata": {
         "description": "The URL for the GitHub repository that contains the project to deploy."
       }
