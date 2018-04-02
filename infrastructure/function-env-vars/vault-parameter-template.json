@@ -27,7 +27,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "https://raw.githubusercontent.com/lrakai/arm-template-custom-functions/master/infrastructure/arm-template.json",
+          "uri": "https://raw.githubusercontent.com/lrakai/arm-template-custom-functions/master/infrastructure/function-env-vars/arm-template.json",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
