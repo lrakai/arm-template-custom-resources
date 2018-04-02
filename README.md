@@ -3,9 +3,9 @@
 This project is inspired by [AWS CloudFormation custom resources](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html). 
 With custom resources you can include any resource in your infrastructure templates, even resources not in AWS.
 Azure Resource Manager (ARM) templates don't have an analogous resource type.
-However, you can come close deploying an Azure Function that is set to run on startup.
+However, you can come close to the custom creation phase by deploying an Azure Function that is set to run on startup.
 
-This project demonstrates the approach of deploying a function in an ARM template and retrieve Azure credentials using Azure Key Vault.
+This project demonstrates the approach of deploying a function in an ARM template and retrieve Azure credentials in Azure Key Vault using 2 methods.
 The particular example uses the Azure function to set the permission of an Azure Data Lake Store that is created by the template.
 It is not possible to set file permissions of the Azure Data Lake Store directly in the ARM template, so the Function is used to set permissions.
 
@@ -21,5 +21,8 @@ It is not possible to set file permissions of the Azure Data Lake Store directly
 
 ## Notes
 
-A consumption plan template is also included `arm-template-consumption.json`. But consumption plans don't support `alwaysOn` so you need to use a frequent schedule or external call to wake the function to have it run even with `RunOnStartup = true`.
+A consumption plan template is also included for the function environment variable method in the `arm-template-consumption.json` template. 
+But consumption plans don't support `alwaysOn` so you need to use a frequent schedule or external call to wake the function to have it run even with `RunOnStartup = true`.
 The app service plan template requires at least a basic tier because free and shared tiers don't support `alwaysOn`. Basic tier costs $0.075/hour at time of writing.
+Consumption plans can very well cost less even with a frequent timer.
+You should consider making your Function idempotent when using a consumption plan.
