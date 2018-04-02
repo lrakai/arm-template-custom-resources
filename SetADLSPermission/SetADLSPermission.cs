@@ -31,13 +31,13 @@ namespace SetADLSPermission
 
             // Function environment varaible access token to authenticate
             // var token = GetEnvironmentVariable("token");
-            // var token = GetAzureAccessToken();
 
             // Programmatic key vault access
             var token = GetAzureAccessTokenFromKeyVault();
             var adlsClient = AdlsClient.CreateClient(accountName, token);
 
-            ModifyAdlsPermission(log, adlsClient, "777");
+            //ModifyAdlsPermission(log, adlsClient, "777");
+            ModifyAdlsAcl(log, adlsClient);
         }
 
         private static string GetAzureAccessTokenFromKeyVault()
@@ -131,10 +131,16 @@ namespace SetADLSPermission
                 .GetResult();
         }
 
-        private static void ModifyAdlsPermission(TraceWriter log, AdlsClient adlsClient, string permisison)
+        private static void ModifyAdlsPermission(TraceWriter log, AdlsClient adlsClient, string permission)
         {
-            adlsClient.SetPermission("/", permisison);
-            log.Info($"Set permission to {permisison}");
+            var numDirectories = ModifyAdlsPermissionDirectory("/", adlsClient, permission);
+            log.Info($"Set permission to {permission} on {numDirectories} directories");
+        }
+
+        private static int ModifyAdlsPermissionDirectory(string path, AdlsClient adlsClient, string permission)
+        {
+            adlsClient.SetPermission(path, permission);
+            return 1;
         }
 
         private static void ModifyAdlsAcl(TraceWriter log, AdlsClient adlsClient)
@@ -149,7 +155,7 @@ namespace SetADLSPermission
             {
                 new AclEntry(AclType.other, null, AclScope.Default, AclAction.All)
             };
-            aclProcessorStats = adlsClient.ChangeAcl("/", aclEntry, RequestedAclType.SetAcl);
+            aclProcessorStats = adlsClient.ChangeAcl("/", aclEntry, RequestedAclType.ModifyAcl);
             log.Info($"Set default ACL for {aclProcessorStats.DirectoryProcessed} directories and {aclProcessorStats.FilesProcessed} files");
         }
     }

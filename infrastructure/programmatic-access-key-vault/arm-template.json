@@ -133,7 +133,8 @@
       "name": "[parameters('analyticsName')]",
       "location": "[parameters('dataLakeLocation')]",
       "dependsOn": [
-        "[parameters('storeName')]"
+        "[parameters('storeName')]",
+        "[resourceId('Microsoft.Web/sites/sourcecontrols', variables('functionAppName'), 'web')]"
       ],
       "type": "Microsoft.DataLakeAnalytics/accounts",
       "properties": {
