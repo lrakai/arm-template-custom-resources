@@ -298,6 +298,18 @@
       ]
     },
     {
+      "type": "Microsoft.KeyVault/vaults/providers/locks",
+      "apiVersion": "2015-01-01",
+      "name": "[concat(parameters('keyVaultName'),'/Microsoft.Authorization/KVLock')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+      ],
+      "properties": {
+        "level": "ReadOnly",
+        "notes": "Lock KV"
+      }
+    },
+    {
       "type": "Microsoft.KeyVault/vaults/secrets",
       "name": "[concat(parameters('keyVaultName'), '/', parameters('secretName'))]",
       "apiVersion": "2015-06-01",
