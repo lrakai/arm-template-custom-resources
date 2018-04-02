@@ -117,6 +117,18 @@
       }
     },
     {
+      "type": "Microsoft.DataLakeStore/accounts/providers/locks",
+      "apiVersion": "2015-01-01",
+      "name": "[concat(parameters('storeName'),'/Microsoft.Authorization/DLSLock')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DataLakeStore/accounts', parameters('storeName'))]"
+      ],
+      "properties": {
+        "level": "ReadOnly",
+        "notes": "Lock DLS"
+      }
+    },
+    {
       "apiVersion": "2016-11-01",
       "name": "[parameters('analyticsName')]",
       "location": "[parameters('dataLakeLocation')]",
@@ -132,6 +144,18 @@
           }
         ],
         "newTier": "[parameters('newTier')]"
+      }
+    },
+    {
+      "type": "Microsoft.DataLakeAnalytics/accounts/providers/locks",
+      "apiVersion": "2015-01-01",
+      "name": "[concat(parameters('analyticsName'),'/Microsoft.Authorization/DLALock')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DataLakeAnalytics/accounts', parameters('analyticsName'))]"
+      ],
+      "properties": {
+        "level": "ReadOnly",
+        "notes": "Lock DLA"
       }
     },
     {
@@ -229,6 +253,18 @@
           }
         }
       ]
+    },
+    {
+      "type": "Microsoft.Web/sites/providers/locks",
+      "apiVersion": "2015-01-01",
+      "name": "[concat(variables('functionAppName'),'/Microsoft.Authorization/SiteLock')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites/sourcecontrols', variables('functionAppName'), 'web')]"
+      ],
+      "properties": {
+        "level": "ReadOnly",
+        "notes": "Lock site"
+      }
     },
     {
       "type": "Microsoft.KeyVault/vaults",
