@@ -303,7 +303,7 @@
       "apiVersion": "2015-01-01",
       "name": "[concat(parameters('keyVaultName'),'/Microsoft.Authorization/KVLock')]",
       "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', parameters('keyVaultName'), parameters('secretName'))]"
       ],
       "properties": {
         "level": "ReadOnly",
