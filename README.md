@@ -1,4 +1,4 @@
-# azure-function-set-data-lake-access
+# arm-template-custom-resources
 
 This project is inspired by [AWS CloudFormation custom resources](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html). 
 With custom resources you can include any resource in your infrastructure templates, even resources not in AWS.
