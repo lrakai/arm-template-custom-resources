@@ -93,7 +93,7 @@
     },
     "keyVaultName": {
       "type": "string",
-      "defaultValue": "[concat(uniquestring(resourceGroup().id), 'kv')]"
+      "defaultValue": "[concat('a', uniquestring(resourceGroup().id), 'kv')]"
     }
   },
   "variables": {
