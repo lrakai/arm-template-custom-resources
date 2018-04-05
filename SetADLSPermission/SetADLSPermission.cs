@@ -70,10 +70,10 @@ namespace SetADLSPermission
                 .GetAwaiter()
                 .GetResult();
 
-            // delete after retrieval for security
-            var deletedClientSecret = keyVaultClient.DeleteSecretAsync(vaultUrl, secretName)
-                .GetAwaiter()
-                .GetResult();
+            // delete after retrieval for security (if key vault isn't read-only locked)
+            // var deletedClientSecret = keyVaultClient.DeleteSecretAsync(vaultUrl, secretName)
+            //    .GetAwaiter()
+            //    .GetResult();
 
             var authorizationHeader = GetAuthorizationHeaderWithClientCredentials(
                 clientId,
