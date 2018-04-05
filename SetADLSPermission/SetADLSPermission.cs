@@ -147,6 +147,14 @@ namespace SetADLSPermission
         {
             var aclEntry = new List<AclEntry>()
             {
+                new AclEntry(AclType.other, null, AclScope.Access, AclAction.All),
+                new AclEntry(AclType.other, null, AclScope.Default, AclAction.All)
+            };
+            adlsClient.ModifyAclEntries("/", aclEntry);
+            log.Info($"Set access and default ACL for /");
+            /* Function App doesn't support recursive ACL modificaitons -- April 5, 2017 
+            var aclEntry = new List<AclEntry>()
+            {
                 new AclEntry(AclType.other, null, AclScope.Access, AclAction.All)
             };
             var aclProcessorStats = adlsClient.ChangeAcl("/", aclEntry, RequestedAclType.ModifyAcl);
@@ -156,7 +164,7 @@ namespace SetADLSPermission
                 new AclEntry(AclType.other, null, AclScope.Default, AclAction.All)
             };
             aclProcessorStats = adlsClient.ChangeAcl("/", aclEntry, RequestedAclType.ModifyAcl);
-            log.Info($"Set default ACL for {aclProcessorStats.DirectoryProcessed} directories and {aclProcessorStats.FilesProcessed} files");
+            log.Info($"Set default ACL for {aclProcessorStats.DirectoryProcessed} directories and {aclProcessorStats.FilesProcessed} files");*/
         }
     }
 }
