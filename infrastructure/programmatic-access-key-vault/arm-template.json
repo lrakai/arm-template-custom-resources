@@ -94,6 +94,10 @@
     "keyVaultName": {
       "type": "string",
       "defaultValue": "[concat('a', uniquestring(resourceGroup().id), 'kv')]"
+    },
+    "rgLockName": {
+      "type": "string",
+      "defaultValue": "rgLock"
     }
   },
   "variables": {
@@ -320,6 +324,18 @@
       "dependsOn": [
         "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
       ]
+    },
+    {
+      "type": "Microsoft.Authorization/locks",
+      "name": "[parameters('rgLockName')]",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.DataLakeAnalytics/accounts/providers/locks', parameters('analyticsName'), 'Microsoft.Authorization', 'DLALock')]"
+      ],
+      "properties": {
+        "level": "ReadOnly",
+        "notes": "Lock resource group"
+      }
     }
   ]
 }
