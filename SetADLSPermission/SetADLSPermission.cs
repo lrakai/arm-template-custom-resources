@@ -66,7 +66,7 @@ namespace SetADLSPermission
             {
                 secretName = secret.Identifier.Name;
             }
-            var clientSecret = keyVaultClient.GetSecretAsync(vaultUrl, secretName)
+            var vaultSecret = keyVaultClient.GetSecretAsync(vaultUrl, secretName)
                 .GetAwaiter()
                 .GetResult();
 
@@ -75,11 +75,12 @@ namespace SetADLSPermission
             //    .GetAwaiter()
             //    .GetResult();
 
-            var authorizationHeader = GetAuthorizationHeaderWithClientCredentials(
-                clientId,
-                clientSecret.Value);
+            // If the vaultSecret is a clientSecret (not a Bearer token) then generate a Bearer token auth header
+            // var authorizationHeader = GetAuthorizationHeaderWithClientCredentials(
+            //    clientId,
+            //    vaultSecret.Value);
 
-            return authorizationHeader;
+            return $"Bearer {vaultSecret.Value}";
         }
 
         private static string GetAzureAccessTokenFromEnvVars()
